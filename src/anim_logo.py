@@ -1,22 +1,69 @@
 from manim import *
-from anim_graphs import PlotLines
-from pend_anim import PendAnim
+from graphs_anim import PlotView
+from pend_anim import PendView, PendSimulator
+from common import modulo
 
 def svgobj_fix_pathes(obj):
   for i in range(len(obj)):
     obj[i].stroke_width = 0.5
+
+
+class PendAnim(VGroup):
+  def __init__(self, q0, dq0, speed=1, animtime=5):
+    super().__init__()
+    model = PendSimulator(q0, dq0, max_step=1e-3, nsteps=500, atol=1e-3, rtol=1e-3)
+    self.plot = PlotView(
+      [0, animtime],
+      [-np.pi, np.pi],
+      2,
+      2,
+      axis_config={"color": LIGHT_GRAY},
+      tips=False
+    )
+    nlinks, = np.shape(q0)
+    self.plot.add_curves(nlinks)
+    self.plot.set_x(-2)
+    self.plot.set_y(0)
+    view = PendView(q0)
+    view.set_x(0)
+    view.set_y(2)
+    self.speed = speed
+    self.model = model
+    self.view = view
+    self.time = 0
+    self.add(self.plot)
+    self.add(view)
+
+  def animate(self, *args, **kwargs):
+    self.add_updater(self._update, call_updater=True)
+    return super().animate(*args, **kwargs)
+
+  def _update(self, _, dt=0, recursive=None):
+    self.time += dt
+    q,_ = self.model.update(self.time * self.speed)
+    self.view.move(q)
+    q = modulo(q, -np.pi, np.pi)
+    self.plot.append_values(self.time, *q)
+
+  def scale(self, factor):
+    self.view.scale(factor)
+    super().scale(factor)
 
 class LogoAnim(Scene):
   def construct(self):
     self.camera.background_color = WHITE
     self.speedup = 5.
 
-    animtime = 10
+    animtime = 2
     self.anims = []
-    pend = PendAnim(5, animtime)
-    self.add(pend)
-    a = Create(pend)
-    self.play(a)
+    q0 = np.zeros(7)
+    dq0 = 1e-3 * np.random.normal(size=q0.shape)
+    pend = PendAnim(q0, dq0, speed=1, animtime=animtime)
+    pend.scale(0.5)
+    self.play(Create(pend.copy(), run_time=5))
+    self.play(pend.animate(run_time=animtime))
+    # a = Create(pend)
+    # self.play(a)
     # self.add_phase_portrait()
     # self.add_sing_cond()
     # self.add_fundamental()
@@ -109,7 +156,11 @@ class LogoAnim(Scene):
     anim = Animation(obj)
     self.anims.append(anim)
 
-with tempconfig({"quality": "medium_quality", "speedup": 2}):
-  scene = LogoAnim()
-  scene.render()
-
+if __name__ == '__main__':
+  with tempconfig({
+      "quality": "medium_quality", 
+      "format": "gif", 
+      "disable_caching": True
+    }):
+    scene = LogoAnim()
+    scene.render()

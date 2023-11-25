@@ -46,9 +46,12 @@ class PendSimulator:
 
   def update(self, t):
     self.integrator.integrate(t)
-    assert self.integrator.successful()
+    assert self.integrator.successful(), self.integrator.get_return_code()
     self.q = self.integrator.y[0:self.nlinks].copy()
     self.dq = self.integrator.y[self.nlinks:].copy()
+    return self.q, self.dq
+  
+  def get_state(self):
     return self.q, self.dq
 
 def get_verts_coordinates(q : np.ndarray):

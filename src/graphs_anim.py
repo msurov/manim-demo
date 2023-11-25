@@ -2,6 +2,9 @@ from manim import *
 from manim.mobject.mobject import _AnimationBuilder
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 
+def gen_color():
+  value = np.random.random_integers(0, 0xFFFFFF)
+  return ManimColor(f"#{value:06X}")
 
 class PolyLine(VMobject, metaclass=ConvertToOpenGL):
   def __init__(self, axes : Axes, color: ParsableManimColor = BLUE, **kwargs) -> None:
@@ -39,6 +42,19 @@ class PlotView(VGroup):
     self.ax.add(p)
     self.curves.append(p)
     return p
+  
+  def add_curves(self, ncurves, **Kwargs):
+    curves = []
+    for i in range(ncurves):
+      color = gen_color()
+      curve = self.add_curve(color, **Kwargs)
+      curves.append(curve)
+    return curves
+
+  def append_values(self, t, *values):
+    assert len(values) == len(self.curves)
+    for c,v in zip(self.curves, values):
+      c.append_value(t, v)
 
 class PlotAnim(VGroup):
   def __init__(self):
