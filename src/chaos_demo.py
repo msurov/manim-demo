@@ -97,12 +97,12 @@ class ChaosDemo(Scene):
 
 if __name__ == '__main__':
   with tempconfig({
-    "quality": "production_quality", 
-    # "quality": "medium_quality", 
+    # "quality": "production_quality", 
+    "quality": "medium_quality", 
     # "quality": "example_quality",
     # "format": "gif", 
-    "pixel_width": 1000,
-    "pixel_height": 2000,
+    "pixel_width": 500,
+    "pixel_height": 1000,
     "frame_height": 6,
     "frame_width": 3,
     "aspect": 0.5,
